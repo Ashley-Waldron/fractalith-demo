@@ -9,7 +9,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 @Component("searchOrderPlacedEventConsumer")
-@ConditionalOnProperty(prefix = "search", name = "transport", havingValue = "spring", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "search", name = "event.type", havingValue = "local", matchIfMissing = true)
 @RequiredArgsConstructor
 class OrderPlacedEventConsumer implements EventConsumer<OrderPlacedEvent> {
 

@@ -24,6 +24,10 @@ class OrderService {
     private void createOrder(CreateOrderRequest request) {
         String orderId = request.id();
         Order order = new Order(orderId, request.sku(), request.quantity(), "CREATED");
-        eventPublisher.publish(new OrderPlacedEvent(order.id(), request.customerId(), request.sku(), request.quantity()));
+        publishOrderPlacedEvent(new OrderPlacedEvent(order.id(), request.customerId(), request.sku(), request.quantity()));
+    }
+
+    void publishOrderPlacedEvent(OrderPlacedEvent event) {
+        eventPublisher.publish(event);
     }
 }

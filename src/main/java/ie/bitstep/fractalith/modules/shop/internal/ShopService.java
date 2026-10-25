@@ -2,6 +2,7 @@ package ie.bitstep.fractalith.modules.shop.internal;
 
 import ie.bitstep.fractalith.common.api.EventPublisher;
 import ie.bitstep.fractalith.modules.inventory.api.InventoryApi;
+import ie.bitstep.fractalith.modules.inventory.api.InventoryException;
 import ie.bitstep.fractalith.modules.inventory.api.InventoryRequest;
 import ie.bitstep.fractalith.modules.order.api.CreateOrderRequest;
 import ie.bitstep.fractalith.modules.shop.api.CheckoutRequest;
@@ -20,7 +21,9 @@ public class ShopService implements ShopApi {
     @Override
     public String checkout(CheckoutRequest request) {
         InventoryRequest inventoryRequest = new InventoryRequest(request.sku(), request.quantity());
-        if (!inventoryApi.isAvailable(inventoryRequest)) {
+        try {
+            inventoryApi.hold(inventoryRequest);
+        } catch (InventoryException e) {
             return "Unavailable";
         }
 

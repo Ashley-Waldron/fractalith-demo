@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 @Component("paymentOrderPlacedKafkaEventConsumer")
-@ConditionalOnProperty(prefix = "payment", name = "transport", havingValue = "kafka")
+@ConditionalOnProperty(prefix = "payment", name = "event.type", havingValue = "kafka")
 class OrderPlacedKafkaEventConsumer extends KafkaEventConsumer<OrderPlacedEvent> {
 
     OrderPlacedKafkaEventConsumer(PaymentService paymentService) {

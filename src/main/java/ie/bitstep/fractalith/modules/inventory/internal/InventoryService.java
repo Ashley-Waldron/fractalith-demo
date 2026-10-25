@@ -2,13 +2,20 @@ package ie.bitstep.fractalith.modules.inventory.internal;
 
 import ie.bitstep.fractalith.modules.inventory.api.InventoryApi;
 import ie.bitstep.fractalith.modules.inventory.api.InventoryRequest;
+import ie.bitstep.fractalith.modules.inventory.api.NotInStockException;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 @Service
+@Primary
+@ConditionalOnProperty(prefix = "inventory", name = "api.type", havingValue = "local", matchIfMissing = true)
 class InventoryService implements InventoryApi {
 
     @Override
-    public boolean isAvailable(InventoryRequest request) {
-        return request.quantity() > 0 && request.sku() != null && !request.sku().isBlank();
+    public void hold(InventoryRequest request) {
+        if (request == null || request.quantity() <= 0 || request.sku() == null || request.sku().isBlank()) {
+            throw new NotInStockException("Item is not in stock: " + (request == null ? "unknown" : request.sku()));
+        }
     }
 }

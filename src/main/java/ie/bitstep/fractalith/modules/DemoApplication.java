@@ -7,6 +7,7 @@ import ie.bitstep.fractalith.modules.order.api.CreateOrderRequest;
 import java.util.concurrent.Executor;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -21,11 +22,13 @@ public class DemoApplication {
 	}
 
 	@Bean
+	@ConditionalOnProperty(prefix = "order", name = "event.type", havingValue = "local", matchIfMissing = true)
 	EventPublisher<OrderPlacedEvent> orderPlacedEventPublisher(ApplicationEventPublisher delegate) {
 		return new SpringEventPublisher<>(delegate);
 	}
 
 	@Bean
+	@ConditionalOnProperty(prefix = "order", name = "event.type", havingValue = "local", matchIfMissing = true)
 	EventPublisher<CreateOrderRequest> orderRequestEventPublisher(ApplicationEventPublisher delegate) {
 		return new SpringEventPublisher<>(delegate);
 	}
