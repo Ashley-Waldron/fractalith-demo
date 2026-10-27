@@ -9,10 +9,12 @@ import ie.bitstep.fractalith.modules.shop.api.CheckoutRequest;
 import ie.bitstep.fractalith.modules.shop.api.ShopApi;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ShopService implements ShopApi {
 
     private final InventoryApi inventoryApi;
@@ -21,9 +23,11 @@ public class ShopService implements ShopApi {
     @Override
     public String checkout(CheckoutRequest request) {
         InventoryRequest inventoryRequest = new InventoryRequest(request.sku(), request.quantity());
+        log.debug("Processing checkout request for sku {}: {}", request.sku(), request.quantity());
         try {
             inventoryApi.hold(inventoryRequest);
         } catch (InventoryException e) {
+            log.warn("Failed to hold inventory for sku {}: {}", request.sku(), request.quantity());
             return "Unavailable";
         }
 

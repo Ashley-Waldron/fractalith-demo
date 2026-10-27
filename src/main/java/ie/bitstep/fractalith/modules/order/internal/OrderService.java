@@ -5,12 +5,14 @@ import ie.bitstep.fractalith.modules.order.api.Order;
 import ie.bitstep.fractalith.modules.order.api.OrderPlacedEvent;
 import ie.bitstep.fractalith.modules.order.api.CreateOrderRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 class OrderService {
 
     private final EventPublisher<OrderPlacedEvent> eventPublisher;
@@ -18,12 +20,14 @@ class OrderService {
     @Async("applicationTaskExecutor")
     @EventListener(CreateOrderRequest.class)
     void handleOrderRequest(CreateOrderRequest request) {
+        log.debug("Received create order event over Spring event Listener: {}", request);
         createOrder(request);
     }
 
     private void createOrder(CreateOrderRequest request) {
         String orderId = request.id();
         Order order = new Order(orderId, request.sku(), request.quantity(), "CREATED");
+        log.debug("Created order: {}", order);
         publishOrderPlacedEvent(new OrderPlacedEvent(order.id(), request.customerId(), request.sku(), request.quantity()));
     }
 

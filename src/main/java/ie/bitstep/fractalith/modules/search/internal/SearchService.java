@@ -4,32 +4,32 @@ import ie.bitstep.fractalith.modules.order.api.OrderPlacedEvent;
 import ie.bitstep.fractalith.modules.search.api.ProductDocument;
 import ie.bitstep.fractalith.modules.search.api.SearchApi;
 import ie.bitstep.fractalith.modules.search.api.SearchRequest;
-import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Async;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-@Service
-class SearchService implements SearchApi {
+import java.util.List;
 
-    private static final Logger log = LoggerFactory.getLogger(SearchService.class);
+@Service
+@Slf4j
+class SearchService implements SearchApi {
 
     @Override
     public List<ProductDocument> search(SearchRequest request) {
+        log.debug("Received search request: {}", request);
         if (request == null || request.query() == null || request.query().isBlank()) {
+            log.debug("Search request is invalid.");
             return List.of();
         }
 
+        log.debug("Executing search for query: {}", request.query());
         return List.of(
             new ProductDocument("SKU-100", "Sample product"),
             new ProductDocument("SKU-200", "Another sample product")
         );
     }
 
-    public void processOrderPlacedEvent(OrderPlacedEvent event) {
+    void processOrderPlacedEvent(OrderPlacedEvent event) {
         ProductDocument document = new ProductDocument(event.sku(), "Indexed product for order " + event.orderId());
-        log.info("Asynchronous search index update for sku {}: {}", event.sku(), document.name());
+        log.info("Search index update for sku {}: {}", event.sku(), document.name());
     }
 }
