@@ -28,7 +28,6 @@ public class DemoApplication {
 	}
 
 	@Bean
-	@ConditionalOnProperty(prefix = "order", name = "event.type", havingValue = "local", matchIfMissing = true)
 	EventPublisher<CreateOrderRequest> orderRequestEventPublisher(ApplicationEventPublisher delegate) {
 		return new SpringEventPublisher<>(delegate);
 	}

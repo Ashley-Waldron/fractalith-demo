@@ -1,0 +1,26 @@
+server:
+  port: 8080
+
+order:
+  event:
+    type: kafka
+
+payment:
+  event:
+    type: kafka
+
+search:
+  event:
+    type: kafka
+  api:
+    type: http
+
+inventory:
+  api:
+    type: local
+
+spring:
+  kafka:
+    bootstrap-servers: kafka:9092
+    consumer:
+      auto-offset-reset: earliest

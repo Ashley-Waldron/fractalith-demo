@@ -1,0 +1,20 @@
+server:
+  port: 8080
+
+order:
+  event:
+    type: local
+
+payment:
+  event:
+    type: local
+
+search:
+  event:
+    type: local
+  api:
+    type: http
+
+inventory:
+  api:
+    type: local

@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: fractalith
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      auto-offset-reset: earliest
+
+server:
+  port: ${SERVER_PORT:8080}
+
+order:
+  event:
+    type: ${ORDER_EVENT_TYPE:local}
+
+payment:
+  event:
+    type: ${PAYMENT_EVENT_TYPE:local}
+
+search:
+  event:
+    type: ${SEARCH_EVENT_TYPE:local}
+  api:
+    type: ${SEARCH_API_TYPE:http}
+    url: ${SEARCH_API_URL:http://localhost:8081}
+
+inventory:
+  api:
+    type: ${INVENTORY_API_TYPE:local}
+    url: ${INVENTORY_API_URL:http://localhost:8080}
+
+logging:
+  level:
+    ie:
+      bitstep:
+        fractalith: DEBUG
