@@ -22,12 +22,14 @@ public class DemoApplication {
 	}
 
 	@Bean
-	@ConditionalOnProperty(prefix = "order", name = "event.type", havingValue = "local", matchIfMissing = true)
+	@ConditionalOnProperty(prefix = "modules.order", name = "enabled", havingValue = "true", matchIfMissing = true)
+	@ConditionalOnProperty(prefix = "modules.order.event", name = "type", havingValue = "local", matchIfMissing = true)
 	EventPublisher<OrderPlacedEvent> orderPlacedEventPublisher(ApplicationEventPublisher delegate) {
 		return new SpringEventPublisher<>(delegate);
 	}
 
 	@Bean
+	@ConditionalOnProperty(prefix = "modules.order", name = "enabled", havingValue = "true", matchIfMissing = true)
 	EventPublisher<CreateOrderRequest> orderRequestEventPublisher(ApplicationEventPublisher delegate) {
 		return new SpringEventPublisher<>(delegate);
 	}

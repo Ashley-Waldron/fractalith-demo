@@ -5,11 +5,13 @@ import ie.bitstep.fractalith.modules.search.api.ProductDocument;
 import ie.bitstep.fractalith.modules.search.api.SearchApi;
 import ie.bitstep.fractalith.modules.search.api.SearchRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@ConditionalOnProperty(prefix = "modules.search", name = "enabled", havingValue = "true")
 @Slf4j
 class SearchService implements SearchApi {
 

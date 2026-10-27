@@ -13,13 +13,14 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
 
 @Service
-@ConditionalOnProperty(prefix = "inventory", name = "api.type", havingValue = "http")
+@ConditionalOnProperty(prefix = "modules.inventory", name = "enabled", havingValue = "true")
+@ConditionalOnProperty(prefix = "modules.inventory.api", name = "type", havingValue = "http")
 @Slf4j
 class HttpInventoryApi implements InventoryApi {
 
     private final RestClient restClient;
 
-    HttpInventoryApi(@Value("${inventory.api.url:http://localhost:8080}") String baseUrl) {
+    HttpInventoryApi(@Value("${modules.inventory.api.url:http://localhost:8080}") String baseUrl) {
         this.restClient = RestClient.builder().baseUrl(baseUrl).build();
     }
 

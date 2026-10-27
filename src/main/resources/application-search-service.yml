@@ -1,26 +1,17 @@
 server:
   port: 8081
 
-order:
-  event:
-    type: kafka
-
-payment:
-  event:
-    type: kafka
-
-search:
-  event:
-    type: none
-  api:
-    type: none
-
-inventory:
-  api:
-    type: local
-
-spring:
-  kafka:
-    bootstrap-servers: kafka:9092
-    consumer:
-      auto-offset-reset: earliest
+modules:
+  order:
+    enabled: false
+  payment:
+    enabled: false
+  search:
+    enabled: true
+    consumers:
+      order-placed: kafka
+      payment: local
+    api:
+      type: http
+  inventory:
+    enabled: false

@@ -7,7 +7,8 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 @Component("orderPlacedKafkaEventPublisher")
-@ConditionalOnProperty(prefix = "order", name = "event.type", havingValue = "kafka")
+@ConditionalOnProperty(prefix = "modules.order", name = "enabled", havingValue = "true")
+@ConditionalOnProperty(prefix = "modules.order.event", name = "type", havingValue = "kafka")
 class OrderPlacedKafkaEventPublisher extends KafkaEventPublisher<OrderPlacedEvent> {
 
     OrderPlacedKafkaEventPublisher(KafkaTemplate<String, OrderPlacedEvent> kafkaTemplate) {

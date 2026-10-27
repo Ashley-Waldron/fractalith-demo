@@ -10,9 +10,12 @@ import ie.bitstep.fractalith.modules.shop.api.ShopApi;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 @Service
+@ConditionalOnProperty(prefix = "modules.order", name = "enabled", havingValue = "true")
+@ConditionalOnProperty(prefix = "modules.inventory", name = "enabled", havingValue = "true")
 @RequiredArgsConstructor
 @Slf4j
 public class ShopService implements ShopApi {

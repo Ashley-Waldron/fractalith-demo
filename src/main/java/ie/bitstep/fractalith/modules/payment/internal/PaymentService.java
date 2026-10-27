@@ -6,11 +6,13 @@ import ie.bitstep.fractalith.modules.payment.api.PaymentRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
+@ConditionalOnProperty(prefix = "modules.payment", name = "enabled", havingValue = "true")
 @Slf4j
 class PaymentService {
 

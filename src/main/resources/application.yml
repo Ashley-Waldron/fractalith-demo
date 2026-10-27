@@ -9,25 +9,28 @@ spring:
 server:
   port: ${SERVER_PORT:8080}
 
-order:
-  event:
-    type: ${ORDER_EVENT_TYPE:local}
-
-payment:
-  event:
-    type: ${PAYMENT_EVENT_TYPE:local}
-
-search:
-  event:
-    type: ${SEARCH_EVENT_TYPE:local}
-  api:
-    type: ${SEARCH_API_TYPE:http}
-    url: ${SEARCH_API_URL:http://localhost:8081}
-
-inventory:
-  api:
-    type: ${INVENTORY_API_TYPE:local}
-    url: ${INVENTORY_API_URL:http://localhost:8080}
+modules:
+  order:
+    enabled: ${MODULE_ORDER_ENABLED:true}
+    event:
+      type: ${MODULE_ORDER_EVENT_TYPE:local}
+  payment:
+    enabled: ${MODULE_PAYMENT_ENABLED:true}
+    event:
+      type: ${MODULE_PAYMENT_EVENT_TYPE:local}
+  search:
+    enabled: ${MODULE_SEARCH_ENABLED:true}
+    consumers:
+      order-placed: ${MODULE_SEARCH_CONSUMERS_ORDER_PLACED:local}
+      payment: ${MODULE_SEARCH_CONSUMERS_PAYMENT:local}
+    api:
+      type: ${MODULE_SEARCH_API_TYPE:http}
+      url: ${MODULE_SEARCH_API_URL:http://localhost:8081}
+  inventory:
+    enabled: ${MODULE_INVENTORY_ENABLED:true}
+    api:
+      type: ${MODULE_INVENTORY_API_TYPE:local}
+      url: ${MODULE_INVENTORY_API_URL:http://localhost:8080}
 
 logging:
   level:

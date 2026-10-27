@@ -9,7 +9,8 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
 @Component("paymentOrderPlacedKafkaEventConsumer")
-@ConditionalOnProperty(prefix = "payment", name = "event.type", havingValue = "kafka")
+@ConditionalOnProperty(prefix = "modules.payment", name = "enabled", havingValue = "true")
+@ConditionalOnProperty(prefix = "modules.payment.event", name = "type", havingValue = "kafka")
 @RequiredArgsConstructor
 @Slf4j
 class OrderPlacedKafkaEventConsumer implements EventConsumer<OrderPlacedEvent> {

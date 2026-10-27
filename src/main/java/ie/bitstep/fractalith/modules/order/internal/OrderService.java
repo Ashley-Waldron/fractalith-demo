@@ -6,11 +6,13 @@ import ie.bitstep.fractalith.modules.order.api.OrderPlacedEvent;
 import ie.bitstep.fractalith.modules.order.api.CreateOrderRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
+@ConditionalOnProperty(prefix = "modules.order", name = "enabled", havingValue = "true")
 @RequiredArgsConstructor
 @Slf4j
 class OrderService {
