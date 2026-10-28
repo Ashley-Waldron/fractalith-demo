@@ -2,6 +2,7 @@ package ie.bitstep.fractalith.modules.shop.api;
 
 import ie.bitstep.fractalith.modules.shop.internal.ShopService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/shop")
+@ConditionalOnProperty(prefix = "modules.shop", name = "enabled", havingValue = "true")
 @RequiredArgsConstructor
 public class ShopController {
 

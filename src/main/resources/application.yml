@@ -1,36 +1,40 @@
-spring:
-  application:
-    name: fractalith
-  kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-    consumer:
-      auto-offset-reset: earliest
+#spring:
+#  application:
+#    name: fractalith
+#  kafka:
+#    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+#    consumer:
+#      auto-offset-reset: earliest
 
 server:
   port: ${SERVER_PORT:8080}
 
 modules:
-  order:
-    enabled: ${MODULE_ORDER_ENABLED:true}
-    event:
-      type: ${MODULE_ORDER_EVENT_TYPE:local}
-  payment:
-    enabled: ${MODULE_PAYMENT_ENABLED:true}
-    event:
-      type: ${MODULE_PAYMENT_EVENT_TYPE:local}
+  shop:
+    enabled: ${MODULE_SHOP_ENABLED:true}
+    publishers:
+      create-order-request: ${MODULE_ORDER_PUBLISHERS_CREATE_ORDER_REQUEST:local}
   search:
     enabled: ${MODULE_SEARCH_ENABLED:true}
+    inbound: ${MODULE_SEARCH_INBOUND:local}
     consumers:
       order-placed: ${MODULE_SEARCH_CONSUMERS_ORDER_PLACED:local}
-      payment: ${MODULE_SEARCH_CONSUMERS_PAYMENT:local}
-    api:
-      type: ${MODULE_SEARCH_API_TYPE:http}
-      url: ${MODULE_SEARCH_API_URL:http://localhost:8081}
+  order:
+    enabled: ${MODULE_ORDER_ENABLED:true}
+    publishers:
+      order-placed: ${MODULE_ORDER_PUBLISHERS_ORDER_PLACED:local}
+      create-order-request: ${MODULE_ORDER_PUBLISHERS_CREATE_ORDER_REQUEST:local}
+  payment:
+    enabled: ${MODULE_PAYMENT_ENABLED:true}
+    publishers:
+      payment-processed: ${MODULE_PAYMENT_PUBLISHERS_PAYMENT_PROCESSED:local}
+    consumers:
+      order-placed: ${MODULE_PAYMENT_CONSUMERS_ORDER_PLACED:local}
   inventory:
     enabled: ${MODULE_INVENTORY_ENABLED:true}
-    api:
-      type: ${MODULE_INVENTORY_API_TYPE:local}
-      url: ${MODULE_INVENTORY_API_URL:http://localhost:8080}
+    consumers:
+      payment-processed: ${MODULE_INVENTORY_CONSUMERS_PAYMENT_PROCESSED:local}
+    inbound: ${MODULE_INVENTORY_INBOUND:local}
 
 logging:
   level:

@@ -1,5 +1,6 @@
 package ie.bitstep.fractalith.modules.search.internal;
 
+import ie.bitstep.fractalith.common.api.ConditionalOnPropertyContains;
 import ie.bitstep.fractalith.common.api.EventConsumer;
 import ie.bitstep.fractalith.modules.order.api.OrderPlacedEvent;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +12,7 @@ import org.springframework.stereotype.Component;
 
 @Component("searchOrderPlacedEventConsumer")
 @ConditionalOnProperty(prefix = "modules.search", name = "enabled", havingValue = "true")
-@ConditionalOnProperty(prefix = "modules.search.consumers", name = "order-placed", havingValue = "local", matchIfMissing = true)
+@ConditionalOnPropertyContains(prefix = "modules.search.consumers", name = "order-placed", value = "local")
 @RequiredArgsConstructor
 @Slf4j
 class OrderPlacedEventConsumer implements EventConsumer<OrderPlacedEvent> {

@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/inventory")
 @ConditionalOnProperty(prefix = "modules.inventory", name = "enabled", havingValue = "true")
-@ConditionalOnProperty(prefix = "modules.inventory.api", name = "type", havingValue = "http")
+@ConditionalOnProperty(prefix = "modules.inventory", name = "inbound", havingValue = "http")
 @RequiredArgsConstructor
 @Slf4j
 class InventoryController {

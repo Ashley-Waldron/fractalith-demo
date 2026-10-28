@@ -1,5 +1,6 @@
 package ie.bitstep.fractalith.modules.payment.internal;
 
+import ie.bitstep.fractalith.common.api.ConditionalOnPropertyContains;
 import ie.bitstep.fractalith.common.api.EventConsumer;
 import ie.bitstep.fractalith.modules.order.api.OrderPlacedEvent;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +12,7 @@ import org.springframework.stereotype.Component;
 
 @Component("paymentOrderPlacedEventConsumer")
 @ConditionalOnProperty(prefix = "modules.payment", name = "enabled", havingValue = "true")
-@ConditionalOnProperty(prefix = "modules.payment.event", name = "type", havingValue = "local", matchIfMissing = true)
+@ConditionalOnPropertyContains(prefix = "modules.payment.consumers", name = "order-placed", value = "local")
 @RequiredArgsConstructor
 @Slf4j
 class OrderPlacedEventConsumer implements EventConsumer<OrderPlacedEvent> {

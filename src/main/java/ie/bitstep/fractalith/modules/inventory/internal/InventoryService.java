@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 @Service
 @Primary
 @ConditionalOnProperty(prefix = "modules.inventory", name = "enabled", havingValue = "true")
-@ConditionalOnProperty(prefix = "modules.inventory.api", name = "type", havingValue = "local", matchIfMissing = true)
 @Slf4j
 class InventoryService implements InventoryApi {
 

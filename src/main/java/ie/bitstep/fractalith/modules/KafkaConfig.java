@@ -1,6 +1,7 @@
 package ie.bitstep.fractalith.modules;
 
 import ie.bitstep.fractalith.modules.order.api.OrderPlacedEvent;
+import ie.bitstep.fractalith.modules.payment.api.PaymentProcessedEvent;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -57,6 +58,42 @@ public class KafkaConfig {
             ConsumerFactory<String, OrderPlacedEvent> orderPlacedConsumerFactory) {
         ConcurrentKafkaListenerContainerFactory<String, OrderPlacedEvent> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(orderPlacedConsumerFactory);
+        return factory;
+    }
+
+    @Bean
+    public ProducerFactory<String, PaymentProcessedEvent> paymentProcessedProducerFactory(
+            @Value("${spring.kafka.bootstrap-servers:localhost:9092}") String bootstrapServers) {
+        Map<String, Object> configProps = new HashMap<>();
+        configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+        return new DefaultKafkaProducerFactory<>(configProps);
+    }
+
+    @Bean
+    public KafkaTemplate<String, PaymentProcessedEvent> paymentProcessedKafkaTemplate(
+            ProducerFactory<String, PaymentProcessedEvent> paymentProcessedProducerFactory) {
+        return new KafkaTemplate<>(paymentProcessedProducerFactory);
+    }
+
+    @Bean
+    public ConsumerFactory<String, PaymentProcessedEvent> paymentProcessedConsumerFactory(
+            @Value("${spring.kafka.bootstrap-servers:localhost:9092}") String bootstrapServers) {
+        Map<String, Object> props = new HashMap<>();
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, "fractalith");
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
+        props.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
+        return new DefaultKafkaConsumerFactory<>(props, new StringDeserializer(), new JsonDeserializer<>(PaymentProcessedEvent.class));
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, PaymentProcessedEvent> paymentProcessedKafkaListenerContainerFactory(
+            ConsumerFactory<String, PaymentProcessedEvent> paymentProcessedConsumerFactory) {
+        ConcurrentKafkaListenerContainerFactory<String, PaymentProcessedEvent> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(paymentProcessedConsumerFactory);
         return factory;
     }
 }

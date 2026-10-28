@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/search")
 @ConditionalOnProperty(prefix = "modules.search", name = "enabled", havingValue = "true")
-@ConditionalOnProperty(prefix = "modules.search.api", name = "type", havingValue = "http")
+@ConditionalOnProperty(prefix = "modules.search", name = "inbound", havingValue = "http")
 @RequiredArgsConstructor
 class SearchController {
 

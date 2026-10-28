@@ -32,7 +32,6 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: search-service
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      SEARCH_API_URL: http://fractalith-search:8081
     ports:
       - "8081:8081"
 
@@ -48,6 +47,5 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: split-search
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      SEARCH_API_URL: http://fractalith-search:8081
     ports:
       - "8080:8080"

@@ -1,9 +1,11 @@
 package ie.bitstep.fractalith.modules;
 
+import ie.bitstep.fractalith.common.api.ConditionalOnPropertyContains;
 import ie.bitstep.fractalith.common.api.EventPublisher;
 import ie.bitstep.fractalith.common.api.SpringEventPublisher;
 import ie.bitstep.fractalith.modules.order.api.OrderPlacedEvent;
 import ie.bitstep.fractalith.modules.order.api.CreateOrderRequest;
+import ie.bitstep.fractalith.modules.payment.api.PaymentProcessedEvent;
 import java.util.concurrent.Executor;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -23,14 +25,22 @@ public class DemoApplication {
 
 	@Bean
 	@ConditionalOnProperty(prefix = "modules.order", name = "enabled", havingValue = "true", matchIfMissing = true)
-	@ConditionalOnProperty(prefix = "modules.order.event", name = "type", havingValue = "local", matchIfMissing = true)
+	@ConditionalOnPropertyContains(prefix = "modules.order.publishers", name = "order-placed", value = "local")
 	EventPublisher<OrderPlacedEvent> orderPlacedEventPublisher(ApplicationEventPublisher delegate) {
 		return new SpringEventPublisher<>(delegate);
 	}
 
 	@Bean
 	@ConditionalOnProperty(prefix = "modules.order", name = "enabled", havingValue = "true", matchIfMissing = true)
+	@ConditionalOnPropertyContains(prefix = "modules.order.publishers", name = "create-order-request", value = "local")
 	EventPublisher<CreateOrderRequest> orderRequestEventPublisher(ApplicationEventPublisher delegate) {
+		return new SpringEventPublisher<>(delegate);
+	}
+
+	@Bean
+	@ConditionalOnProperty(prefix = "modules.payment", name = "enabled", havingValue = "true", matchIfMissing = true)
+	@ConditionalOnPropertyContains(prefix = "modules.payment.publishers", name = "payment-processed", value = "local")
+	EventPublisher<PaymentProcessedEvent> paymentProcessedEventPublisher(ApplicationEventPublisher delegate) {
 		return new SpringEventPublisher<>(delegate);
 	}
 

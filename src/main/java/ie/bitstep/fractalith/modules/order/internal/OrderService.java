@@ -4,6 +4,7 @@ import ie.bitstep.fractalith.common.api.EventPublisher;
 import ie.bitstep.fractalith.modules.order.api.Order;
 import ie.bitstep.fractalith.modules.order.api.OrderPlacedEvent;
 import ie.bitstep.fractalith.modules.order.api.CreateOrderRequest;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -17,7 +18,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 class OrderService {
 
-    private final EventPublisher<OrderPlacedEvent> eventPublisher;
+    private final List<EventPublisher<OrderPlacedEvent>> eventPublishers;
 
     @Async("applicationTaskExecutor")
     @EventListener(CreateOrderRequest.class)
@@ -34,6 +35,6 @@ class OrderService {
     }
 
     void publishOrderPlacedEvent(OrderPlacedEvent event) {
-        eventPublisher.publish(event);
+        eventPublishers.forEach(publisher -> publisher.publish(event));
     }
 }

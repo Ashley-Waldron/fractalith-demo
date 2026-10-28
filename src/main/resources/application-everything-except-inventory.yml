@@ -1,0 +1,43 @@
+spring:
+  application:
+    name: fractalith
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      auto-offset-reset: earliest
+
+#server:
+#  port: ${SERVER_PORT:8080}
+
+modules:
+  shop:
+    enabled: true
+    publishers:
+      create-order-request: ${MODULE_ORDER_PUBLISHERS_CREATE_ORDER_REQUEST:local}
+    apis:
+      inventory:
+        type: http
+        url: http://localhost:8081
+  search:
+    enabled: ${MODULE_SEARCH_ENABLED:true}
+    inbound: ${MODULE_SEARCH_INBOUND:local}
+    consumers:
+      order-placed: ${MODULE_SEARCH_CONSUMERS_ORDER_PLACED:local}
+  order:
+    enabled: ${MODULE_ORDER_ENABLED:true}
+    publishers:
+      order-placed: ${MODULE_ORDER_PUBLISHERS_ORDER_PLACED:local}
+      create-order-request: ${MODULE_ORDER_PUBLISHERS_CREATE_ORDER_REQUEST:local}
+  payment:
+    enabled: true
+    publishers:
+      payment-processed: local,kafka
+  inventory:
+    enabled: false
+
+
+logging:
+  level:
+    ie:
+      bitstep:
+        fractalith: DEBUG
