@@ -8,12 +8,34 @@
 
 server:
   port: ${SERVER_PORT:8080}
+  shutdown: graceful
+
+spring:
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+instance:
+  id: ${INSTANCE_ID:local}
 
 modules:
   shop:
     enabled: ${MODULE_SHOP_ENABLED:true}
     publishers:
       create-order-request: ${MODULE_ORDER_PUBLISHERS_CREATE_ORDER_REQUEST:local}
+    apis:
+      inventory:
+        type: ${MODULE_SHOP_APIS_INVENTORY_TYPE:local}
+        url: ${MODULE_SHOP_APIS_INVENTORY_URL:}
   search:
     enabled: ${MODULE_SEARCH_ENABLED:true}
     inbound: ${MODULE_SEARCH_INBOUND:local}

@@ -1,0 +1,27 @@
+http:
+  routers:
+    app:
+      rule: PathPrefix(`/`)
+      entryPoints:
+        - web
+      service: app
+      middlewares:
+        - retry
+
+  middlewares:
+    retry:
+      retry:
+        attempts: 3
+        initialInterval: 100ms
+
+  services:
+    app:
+      loadBalancer:
+        healthCheck:
+          path: /actuator/health/readiness
+          interval: 1s
+          timeout: 1s
+        servers:
+          - url: http://app-1:8080
+          - url: http://app-2:8080
+          - url: http://app-3:8080

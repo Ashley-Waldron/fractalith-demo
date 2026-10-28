@@ -1,0 +1,115 @@
+# Demo stack: 3 monolith instances behind a gateway. Kafka and the standalone
+# inventory service are opt-in so they can be introduced live during the demo.
+#
+#   docker compose -f docker-compose.demo.yml up -d --build                       # monolith x3 + gateway
+#   docker compose -f docker-compose.demo.yml up -d kafka kafka-init              # Kafka + topics
+#   docker compose -f docker-compose.demo.yml up -d inventory                     # standalone inventory
+#   scripts/rolling-restart.(sh|ps1)                                              # restart apps with inventory off
+name: fractalith-demo
+
+x-app: &app
+  image: fractalith:demo
+  build:
+    context: .
+  stop_grace_period: 30s
+  healthcheck:
+    test: ["CMD", "curl", "-fs", "http://localhost:8080/actuator/health/readiness"]
+    interval: 2s
+    timeout: 2s
+    retries: 30
+    start_period: 5s
+
+x-app-env: &app-env
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+
+services:
+  gateway:
+    image: traefik:v3.1
+    ports:
+      - "8080:8080"
+      - "9000:9000"
+    volumes:
+      - ./gateway/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./gateway/dynamic.yml:/etc/traefik/dynamic.yml:ro
+
+  app-1:
+    <<: *app
+    environment:
+      <<: *app-env
+      INSTANCE_ID: app-1
+
+  app-2:
+    <<: *app
+    environment:
+      <<: *app-env
+      INSTANCE_ID: app-2
+
+  app-3:
+    <<: *app
+    environment:
+      <<: *app-env
+      INSTANCE_ID: app-3
+
+  kafka:
+    image: bitnamilegacy/kafka:3.7
+    profiles: ["kafka", "inventory"]
+    environment:
+      KAFKA_CFG_NODE_ID: 1
+      KAFKA_CFG_PROCESS_ROLES: controller,broker
+      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "false"
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/bitnami/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list > /dev/null 2>&1 || exit 1"]
+      interval: 5s
+      timeout: 10s
+      retries: 20
+
+  kafka-init:
+    image: bitnamilegacy/kafka:3.7
+    profiles: ["kafka", "inventory"]
+    depends_on:
+      kafka:
+        condition: service_healthy
+    restart: "no"
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        set -e
+        for topic in orders.placed payments.processed; do
+          /opt/bitnami/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 \
+            --create --if-not-exists --topic "$$topic" --partitions 3 --replication-factor 1
+        done
+        /opt/bitnami/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --list
+
+  inventory:
+    image: fractalith:demo
+    build:
+      context: .
+    profiles: ["inventory"]
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+    stop_grace_period: 30s
+    environment:
+      SPRING_PROFILES_ACTIVE: only-inventory
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SERVER_PORT: "8081"
+      INSTANCE_ID: inventory
+      MODULE_SHOP_ENABLED: "false"
+      MODULE_SEARCH_ENABLED: "false"
+      MODULE_ORDER_ENABLED: "false"
+      MODULE_PAYMENT_ENABLED: "false"
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8081/actuator/health/readiness"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+      start_period: 5s

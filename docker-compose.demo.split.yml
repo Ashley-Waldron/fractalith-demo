@@ -1,0 +1,18 @@
+# Override applied during the rolling restart: the monolith instances switch the
+# inventory module off, call the standalone inventory service over HTTP and
+# publish payment events to Kafka instead of handling them in-process.
+#
+#   docker compose -f docker-compose.demo.yml -f docker-compose.demo.split.yml up -d --no-deps --wait app-1
+x-inventory-split: &inventory-split
+  MODULE_INVENTORY_ENABLED: "false"
+  MODULE_SHOP_APIS_INVENTORY_TYPE: http
+  MODULE_SHOP_APIS_INVENTORY_URL: http://inventory:8081
+  MODULE_PAYMENT_PUBLISHERS_PAYMENT_PROCESSED: kafka
+
+services:
+  app-1:
+    environment: *inventory-split
+  app-2:
+    environment: *inventory-split
+  app-3:
+    environment: *inventory-split
