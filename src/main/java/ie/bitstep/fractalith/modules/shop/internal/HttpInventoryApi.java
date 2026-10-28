@@ -20,7 +20,8 @@ class HttpInventoryApi implements InventoryApi {
 
     private final RestClient restClient;
 
-    HttpInventoryApi(@Value("${modules.shop.apis.inventory.url:http://localhost:8081}") String baseUrl) {
+    HttpInventoryApi(@Value("${modules.shop.apis.inventory.url}") String baseUrl) {
+        log.info("Initializing HttpInventoryApi with baseUrl: {}", baseUrl);
         this.restClient = RestClient.builder().baseUrl(baseUrl).build();
     }
 

@@ -32,5 +32,20 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: default,everything-except-inventory
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MODULE_SHOP_ENABLED: "true"
+      MODULE_INVENTORY_ENABLED: "false"
+      MODULE_SHOP_APIS_INVENTORY_TYPE: "http"
+      MODULE_SHOP_APIS_INVENTORY_URL: "http://fractalith-only-inventory:8081"
     ports:
       - "8080:8080"
+
+  fractalith-only-inventory:
+    build:
+      context: .
+    container_name: fractalith-only-inventory
+    environment:
+      SPRING_PROFILES_ACTIVE: only-inventory
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SERVER_PORT: "8081"
+    ports:
+      - "8081:8081"

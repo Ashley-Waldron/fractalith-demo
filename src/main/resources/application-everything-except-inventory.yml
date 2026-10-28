@@ -16,8 +16,8 @@ modules:
       create-order-request: ${MODULE_ORDER_PUBLISHERS_CREATE_ORDER_REQUEST:local}
     apis:
       inventory:
-        type: http
-        url: http://localhost:8081
+        type: ${MODULE_SHOP_APIS_INVENTORY_TYPE:http}
+        url: ${MODULE_SHOP_APIS_INVENTORY_URL:http://fractalith-only-inventory:8081}
   search:
     enabled: ${MODULE_SEARCH_ENABLED:true}
     inbound: ${MODULE_SEARCH_INBOUND:local}
