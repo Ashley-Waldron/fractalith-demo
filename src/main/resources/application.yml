@@ -11,6 +11,10 @@ server:
   shutdown: graceful
 
 spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration
+      - org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration
   lifecycle:
     timeout-per-shutdown-phase: 20s
 
@@ -36,27 +40,48 @@ modules:
       inventory:
         type: ${MODULE_SHOP_APIS_INVENTORY_TYPE:local}
         url: ${MODULE_SHOP_APIS_INVENTORY_URL:}
+    datasource:
+      url: ${MODULE_SHOP_DB_URL:${DB_URL:jdbc:h2:mem:fractalith;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1}}
+      username: ${MODULE_SHOP_DB_USERNAME:${DB_USERNAME:sa}}
+      password: ${MODULE_SHOP_DB_PASSWORD:${DB_PASSWORD:}}
   search:
     enabled: ${MODULE_SEARCH_ENABLED:true}
     inbound: ${MODULE_SEARCH_INBOUND:local}
     consumers:
       order-placed: ${MODULE_SEARCH_CONSUMERS_ORDER_PLACED:local}
+    datasource:
+      url: ${MODULE_SEARCH_DB_URL:${DB_URL:jdbc:h2:mem:fractalith;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1}}
+      username: ${MODULE_SEARCH_DB_USERNAME:${DB_USERNAME:sa}}
+      password: ${MODULE_SEARCH_DB_PASSWORD:${DB_PASSWORD:}}
   order:
     enabled: ${MODULE_ORDER_ENABLED:true}
     publishers:
       order-placed: ${MODULE_ORDER_PUBLISHERS_ORDER_PLACED:local}
       create-order-request: ${MODULE_ORDER_PUBLISHERS_CREATE_ORDER_REQUEST:local}
+    datasource:
+      url: ${MODULE_ORDER_DB_URL:${DB_URL:jdbc:h2:mem:fractalith;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1}}
+      username: ${MODULE_ORDER_DB_USERNAME:${DB_USERNAME:sa}}
+      password: ${MODULE_ORDER_DB_PASSWORD:${DB_PASSWORD:}}
   payment:
     enabled: ${MODULE_PAYMENT_ENABLED:true}
     publishers:
       payment-processed: ${MODULE_PAYMENT_PUBLISHERS_PAYMENT_PROCESSED:local}
     consumers:
       order-placed: ${MODULE_PAYMENT_CONSUMERS_ORDER_PLACED:local}
+    datasource:
+      url: ${MODULE_PAYMENT_DB_URL:${DB_URL:jdbc:h2:mem:fractalith;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1}}
+      username: ${MODULE_PAYMENT_DB_USERNAME:${DB_USERNAME:sa}}
+      password: ${MODULE_PAYMENT_DB_PASSWORD:${DB_PASSWORD:}}
   inventory:
     enabled: ${MODULE_INVENTORY_ENABLED:true}
     consumers:
       payment-processed: ${MODULE_INVENTORY_CONSUMERS_PAYMENT_PROCESSED:local}
     inbound: ${MODULE_INVENTORY_INBOUND:local}
+    datasource:
+      url: ${MODULE_INVENTORY_DB_URL:${DB_URL:jdbc:h2:mem:fractalith;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1}}
+      username: ${MODULE_INVENTORY_DB_USERNAME:${DB_USERNAME:sa}}
+      password: ${MODULE_INVENTORY_DB_PASSWORD:${DB_PASSWORD:}}
+      migration-target-url: ${MODULE_INVENTORY_DB_MIGRATION_TARGET_URL:}
 
 logging:
   level:

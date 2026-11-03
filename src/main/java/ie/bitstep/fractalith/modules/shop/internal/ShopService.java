@@ -21,19 +21,22 @@ public class ShopService implements ShopApi {
 
     private final InventoryApi inventoryApi;
     private final EventPublisher<CreateOrderRequest> eventPublisher;
+    private final CheckoutRepository checkoutRepository;
 
     @Override
     public String checkout(CheckoutRequest request) {
-        InventoryRequest inventoryRequest = new InventoryRequest(request.sku(), request.quantity());
+        String orderId = UUID.randomUUID().toString();
+        InventoryRequest inventoryRequest = new InventoryRequest(orderId, request.sku(), request.quantity());
         log.debug("Processing checkout request for sku {}: {}", request.sku(), request.quantity());
         try {
             inventoryApi.hold(inventoryRequest);
         } catch (InventoryException e) {
             log.warn("Failed to hold inventory for sku {}: {}", request.sku(), request.quantity());
+            checkoutRepository.save(orderId, request.customerId(), request.sku(), request.quantity(), "UNAVAILABLE");
             return "Unavailable";
         }
 
-        String orderId = UUID.randomUUID().toString();
+        checkoutRepository.save(orderId, request.customerId(), request.sku(), request.quantity(), "SUBMITTED");
         CreateOrderRequest createOrderRequest = new CreateOrderRequest(orderId, request.customerId(), request.sku(), request.quantity());
         eventPublisher.publish(createOrderRequest);
         return "Customer " + request.customerId() + " checked out and async event processing has started.";

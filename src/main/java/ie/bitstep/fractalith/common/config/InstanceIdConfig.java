@@ -1,4 +1,4 @@
-package ie.bitstep.fractalith.modules;
+package ie.bitstep.fractalith.common.config;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

@@ -18,10 +18,12 @@ import org.springframework.stereotype.Service;
 class PaymentService {
 
     private final List<EventPublisher<PaymentProcessedEvent>> eventPublishers;
+    private final PaymentRepository paymentRepository;
 
     public void processOrderPlacedEvent(OrderPlacedEvent event) {
         log.debug("Processing order placed event: {}", event);
         Payment payment = processPayment(new PaymentRequest(event.orderId(), event.quantity() * 9.99));
+        paymentRepository.save(payment);
         log.info("Payment processed for order {}: {}", event.orderId(), payment.status());
 
         PaymentProcessedEvent paymentProcessedEvent = new PaymentProcessedEvent(payment.orderId(), payment.amount(), payment.status());

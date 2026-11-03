@@ -4,6 +4,7 @@ import ie.bitstep.fractalith.modules.order.api.OrderPlacedEvent;
 import ie.bitstep.fractalith.modules.search.api.ProductDocument;
 import ie.bitstep.fractalith.modules.search.api.SearchApi;
 import ie.bitstep.fractalith.modules.search.api.SearchRequest;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
@@ -12,8 +13,11 @@ import java.util.List;
 
 @Service
 @ConditionalOnProperty(prefix = "modules.search", name = "enabled", havingValue = "true")
+@RequiredArgsConstructor
 @Slf4j
 class SearchService implements SearchApi {
+
+    private final SearchRepository searchRepository;
 
     @Override
     public List<ProductDocument> search(SearchRequest request) {
@@ -32,6 +36,7 @@ class SearchService implements SearchApi {
 
     void processOrderPlacedEvent(OrderPlacedEvent event) {
         ProductDocument document = new ProductDocument(event.sku(), "Indexed product for order " + event.orderId());
+        searchRepository.index(event.orderId(), document);
         log.info("Search index update for sku {}: {}", event.sku(), document.name());
     }
 }

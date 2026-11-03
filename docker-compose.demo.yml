@@ -5,6 +5,8 @@
 #   docker compose -f docker-compose.demo.yml up -d kafka kafka-init              # Kafka + topics
 #   docker compose -f docker-compose.demo.yml up -d inventory                     # standalone inventory
 #   scripts/rolling-restart.(sh|ps1)                                              # restart apps with inventory off
+#   docker compose -f docker-compose.demo.yml up -d db-inventory                  # part 2: second Postgres for the inventory schema
+#   scripts/inventory-db-cutover.(sh|ps1)                                         # part 2: replicate + live cutover
 name: fractalith-demo
 
 x-app: &app
@@ -21,8 +23,33 @@ x-app: &app
 
 x-app-env: &app-env
   SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  DB_URL: jdbc:postgresql://db-main:5432/fractalith
+  DB_USERNAME: fractalith
+  DB_PASSWORD: fractalith
+
+x-postgres: &postgres
+  image: postgres:16
+  environment:
+    POSTGRES_USER: fractalith
+    POSTGRES_PASSWORD: fractalith
+    POSTGRES_DB: fractalith
+  healthcheck:
+    test: ["CMD-SHELL", "pg_isready -U fractalith -d fractalith"]
+    interval: 2s
+    timeout: 2s
+    retries: 30
 
 services:
+  db-main:
+    <<: *postgres
+    # wal_level=logical is what allows the inventory schema to be replicated to another database
+    command: ["postgres", "-c", "wal_level=logical"]
+
+  db-inventory:
+    <<: *postgres
+    profiles: ["migration"]
+    command: ["postgres", "-c", "wal_level=logical"]
+
   gateway:
     image: traefik:v3.1
     ports:
@@ -34,18 +61,27 @@ services:
 
   app-1:
     <<: *app
+    depends_on:
+      db-main:
+        condition: service_healthy
     environment:
       <<: *app-env
       INSTANCE_ID: app-1
 
   app-2:
     <<: *app
+    depends_on:
+      db-main:
+        condition: service_healthy
     environment:
       <<: *app-env
       INSTANCE_ID: app-2
 
   app-3:
     <<: *app
+    depends_on:
+      db-main:
+        condition: service_healthy
     environment:
       <<: *app-env
       INSTANCE_ID: app-3
@@ -94,7 +130,11 @@ services:
     build:
       context: .
     profiles: ["inventory"]
+    ports:
+      - "8081:8081"
     depends_on:
+      db-main:
+        condition: service_healthy
       kafka-init:
         condition: service_completed_successfully
     stop_grace_period: 30s
@@ -102,6 +142,10 @@ services:
       SPRING_PROFILES_ACTIVE: only-inventory
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       SERVER_PORT: "8081"
+      DB_URL: jdbc:postgresql://db-main:5432/fractalith
+      DB_USERNAME: fractalith
+      DB_PASSWORD: fractalith
+      MODULE_INVENTORY_DB_MIGRATION_TARGET_URL: jdbc:postgresql://db-inventory:5432/fractalith
       INSTANCE_ID: inventory
       MODULE_SHOP_ENABLED: "false"
       MODULE_SEARCH_ENABLED: "false"

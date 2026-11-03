@@ -1,4 +1,4 @@
-package ie.bitstep.fractalith.modules;
+package ie.bitstep.fractalith.common.config;
 
 import ie.bitstep.fractalith.modules.order.api.OrderPlacedEvent;
 import ie.bitstep.fractalith.modules.payment.api.PaymentProcessedEvent;

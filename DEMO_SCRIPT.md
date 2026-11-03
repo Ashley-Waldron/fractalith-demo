@@ -11,6 +11,8 @@ nothing fails.
 |---|---|
 | `gateway` (Traefik) | Load balances `:8080` across the app instances, health-checks them, retries refused connections. Dashboard on `:9000` |
 | `app-1`, `app-2`, `app-3` | The fractalith app. Same image for every instance and for inventory; behaviour is controlled only by environment variables |
+| `db-main` (Postgres) | One database, one schema per module: `shop`, `orders`, `payments`, `search`, `inventory`. Created by Flyway at startup. `wal_level=logical` so schemas can be replicated |
+| `db-inventory` (Postgres) | Empty second database used in Part 2 (profile `migration`) |
 | `kafka`, `kafka-init` | Kafka and the topics `orders.placed`, `payments.processed` (started in step 2) |
 | `inventory` | Standalone inventory service on `:8081` (started in step 3) |
 
@@ -21,7 +23,7 @@ Files: `docker-compose.demo.yml` (base), `docker-compose.demo.split.yml`
 ## Prerequisites
 
 - Docker Desktop with Compose v2 (`docker compose version`)
-- Ports `8080` and `9000` free. Stop any other fractalith compose stack first
+- Ports `8080`, `8081` and `9000` free. Stop any other fractalith compose stack first
   (e.g. `docker compose -f docker-compose.inventory-separate.yml down`)
 - Three terminals in the repo root:
   - **Terminal A**: commands and the rolling restart
@@ -78,7 +80,7 @@ docker compose -f docker-compose.demo.yml logs -f app-1 app-2 app-3
 ```
 
 Look for `InventoryService - Processing inventory hold request` and
-`PaymentProcessedEventConsumer - decreasing inventory by 1`. The `[app-N]` tag
+`InventoryService - Committed inventory for order ...`. The `[app-N]` tag
 shows which instance handled it: inventory is in-process in the monolith.
 
 (Filter if noisy: `... | Select-String InventoryService` or `... | grep InventoryService`.)
@@ -186,10 +188,90 @@ Optional extra: stop the inventory container and show that checkouts now fail
 (`docker compose -f docker-compose.demo.yml stop inventory`), then start it
 again. That's the new trade-off of running it as a separate service.
 
+## Part 2 (longer demo): move the inventory database while serving traffic
+
+Do Steps 1-5 first and leave the traffic generator running. Inventory is now a
+standalone service, but its tables still live in the shared `db-main`.
+
+### 6. Show one database, one schema per module
+
+```
+docker compose -f docker-compose.demo.yml exec db-main psql -U fractalith -d fractalith -c "\dt *.*" | findstr /v pg_ | findstr /v information_schema
+docker compose -f docker-compose.demo.yml exec db-main psql -U fractalith -d fractalith -c "SELECT * FROM inventory.stock"
+docker compose -f docker-compose.demo.yml exec db-main psql -U fractalith -d fractalith -c "SELECT status, count(*) FROM inventory.holds GROUP BY 1"
+```
+
+(bash: replace the `findstr` pipes with `grep -v pg_ | grep -v information_schema`.)
+
+Say: each module only touches its own schema (no cross-schema joins or foreign
+keys), so a schema can move on its own. Inventory's holds/stock counts keep growing
+because of the live traffic.
+
+### 7. Start the new database and replicate the inventory schema
+
+```
+docker compose -f docker-compose.demo.yml up -d --wait db-inventory
+```
+
+PowerShell: `powershell -ExecutionPolicy Bypass -File scripts\inventory-db-replicate.ps1`
+bash: `./scripts/inventory-db-replicate.sh`
+
+The script (read it aloud, it's short):
+
+1. Asks the running inventory service to create the empty inventory tables in
+   `db-inventory` (`POST /inventory/admin/datasource/prepare`, same Flyway migrations)
+2. Creates a Postgres **publication** on `db-main` for `inventory.stock` and `inventory.holds`
+3. Creates a **subscription** on `db-inventory`: Postgres copies the existing rows,
+   then streams every change
+
+Inventory is still reading and writing `db-main`; nothing user-visible changed.
+Optional: show the replica filling up and tracking the original:
+
+```
+docker compose -f docker-compose.demo.yml exec db-inventory psql -U fractalith -d fractalith -c "SELECT count(*) FROM inventory.holds"
+```
+
+Why replication and not dual writes: the app writes to exactly one database, so there is no
+cross-database atomicity problem and no manual rollback. Postgres does the copying and
+guarantees ordering.
+
+### 8. Cut over the live service
+
+PowerShell: `powershell -ExecutionPolicy Bypass -File scripts\inventory-db-cutover.ps1`
+bash: `./scripts/inventory-db-cutover.sh`
+
+What the script does:
+
+1. **Freeze**: new inventory DB connections wait (up to 30s); in-flight transactions finish.
+   Checkout requests just see a short pause. A safety timer lifts the freeze by itself if anything goes wrong.
+2. **Verify**: wait until a fingerprint of both databases is identical (hold count, stock totals, holds by status)
+3. **Switch**: the inventory service builds a connection pool for `db-inventory` and swaps it in; waiting requests resume on the new database
+4. **Clean up**: drops the subscription and publication
+
+Expected output ends with `identical: <count>|<stock>|CONFIRMED:<count>` and
+`Inventory now runs on db-inventory`.
+
+### 9. Prove it
+
+- **Terminal B**: `failed=0` the whole time
+- Rows now only grow in the new database:
+
+```
+docker compose -f docker-compose.demo.yml exec db-main psql -U fractalith -d fractalith -tAc "SELECT count(*) FROM inventory.holds"
+docker compose -f docker-compose.demo.yml exec db-inventory psql -U fractalith -d fractalith -tAc "SELECT count(*) FROM inventory.holds"
+```
+
+Run each twice a few seconds apart: `db-main` is frozen at the cutover count, `db-inventory` keeps increasing.
+- `curl http://localhost:8081/inventory/admin/datasource` shows `currentUrl` pointing at `db-inventory`.
+
+Note: the inventory container's `DB_URL` environment still names `db-main`. In a real
+deployment you'd update the config (and redeploy) afterwards so a restart doesn't go back to the old
+database. The demo leaves it so the replication story stays visible.
+
 ## Reset / cleanup
 
 ```
-docker compose -f docker-compose.demo.yml --profile kafka --profile inventory down -v
+docker compose -f docker-compose.demo.yml --profile kafka --profile inventory --profile migration down -v
 ```
 
 To re-run the demo from the start, run that and begin again at Step 1. The
@@ -203,4 +285,6 @@ rolling restart changes the running containers' environment; `down` clears it.
 | Script blocked: "running scripts is disabled" | Use `powershell -ExecutionPolicy Bypass -File ...` |
 | `#N FAILED` right at the start of traffic | Instances are still starting. Wait for `up -d --wait` to finish |
 | Code or config changes aren't picked up | The image is stale. Rebuild with `docker compose -f docker-compose.demo.yml build` (or `up -d --build`) |
+| `CREATE SUBSCRIPTION` fails or `prepare` returns 409 | `db-inventory` isn't running, or the inventory service isn't the standalone one (the admin API only exists when inbound is HTTP). Do Steps 1-5 first |
+| Cutover prints `Databases did not converge` | Replication isn't running. Re-run the replicate script; the freeze lifts itself after 30s and nothing is lost |
 | Gateway shows all instances DOWN | Check `docker compose -f docker-compose.demo.yml logs gateway`; recreate it with `up -d --force-recreate gateway` |

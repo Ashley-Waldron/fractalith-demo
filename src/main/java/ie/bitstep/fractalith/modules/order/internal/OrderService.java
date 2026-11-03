@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 class OrderService {
 
     private final List<EventPublisher<OrderPlacedEvent>> eventPublishers;
+    private final OrderRepository orderRepository;
 
     @Async("applicationTaskExecutor")
     @EventListener(CreateOrderRequest.class)
@@ -30,6 +31,7 @@ class OrderService {
     private void createOrder(CreateOrderRequest request) {
         String orderId = request.id();
         Order order = new Order(orderId, request.sku(), request.quantity(), "CREATED");
+        orderRepository.save(order, request.customerId());
         log.debug("Created order: {}", order);
         publishOrderPlacedEvent(new OrderPlacedEvent(order.id(), request.customerId(), request.sku(), request.quantity()));
     }
