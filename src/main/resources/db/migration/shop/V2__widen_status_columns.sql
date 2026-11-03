@@ -1,0 +1,1 @@
+ALTER TABLE shop.checkouts ALTER COLUMN status TYPE VARCHAR(32);

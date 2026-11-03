@@ -1,0 +1,1 @@
+ALTER TABLE orders.orders ALTER COLUMN status TYPE VARCHAR(32);

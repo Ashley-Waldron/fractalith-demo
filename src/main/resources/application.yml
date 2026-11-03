@@ -58,6 +58,13 @@ modules:
     publishers:
       order-placed: ${MODULE_ORDER_PUBLISHERS_ORDER_PLACED:local}
       create-order-request: ${MODULE_ORDER_PUBLISHERS_CREATE_ORDER_REQUEST:local}
+      order-ready-for-shipment: ${MODULE_ORDER_PUBLISHERS_ORDER_READY_FOR_SHIPMENT:local}
+    consumers:
+      create-order-request: ${MODULE_ORDER_CONSUMERS_CREATE_ORDER_REQUEST:local}
+      inventory-held: ${MODULE_ORDER_CONSUMERS_INVENTORY_HELD:local}
+      payment-processed: ${MODULE_ORDER_CONSUMERS_PAYMENT_PROCESSED:local}
+      order-shipped: ${MODULE_ORDER_CONSUMERS_ORDER_SHIPPED:local}
+      order-delivered: ${MODULE_ORDER_CONSUMERS_ORDER_DELIVERED:local}
     datasource:
       url: ${MODULE_ORDER_DB_URL:${DB_URL:jdbc:h2:mem:fractalith;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1}}
       username: ${MODULE_ORDER_DB_USERNAME:${DB_USERNAME:sa}}
@@ -74,6 +81,8 @@ modules:
       password: ${MODULE_PAYMENT_DB_PASSWORD:${DB_PASSWORD:}}
   inventory:
     enabled: ${MODULE_INVENTORY_ENABLED:true}
+    publishers:
+      inventory-held: ${MODULE_INVENTORY_PUBLISHERS_INVENTORY_HELD:local}
     consumers:
       payment-processed: ${MODULE_INVENTORY_CONSUMERS_PAYMENT_PROCESSED:local}
     inbound: ${MODULE_INVENTORY_INBOUND:local}
@@ -82,6 +91,13 @@ modules:
       username: ${MODULE_INVENTORY_DB_USERNAME:${DB_USERNAME:sa}}
       password: ${MODULE_INVENTORY_DB_PASSWORD:${DB_PASSWORD:}}
       migration-target-url: ${MODULE_INVENTORY_DB_MIGRATION_TARGET_URL:}
+  shipping:
+    enabled: ${MODULE_SHIPPING_ENABLED:true}
+    publishers:
+      order-shipped: ${MODULE_SHIPPING_PUBLISHERS_ORDER_SHIPPED:local}
+      order-delivered: ${MODULE_SHIPPING_PUBLISHERS_ORDER_DELIVERED:local}
+    consumers:
+      order-ready-for-shipment: ${MODULE_SHIPPING_CONSUMERS_ORDER_READY_FOR_SHIPMENT:local}
 
 logging:
   level:

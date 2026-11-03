@@ -1,6 +1,7 @@
 package ie.bitstep.fractalith.modules.order.internal;
 
 import ie.bitstep.fractalith.modules.order.api.Order;
+import ie.bitstep.fractalith.modules.order.api.OrderDetails;
 import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -33,5 +34,25 @@ class OrderRepository {
         } catch (DuplicateKeyException e) {
             log.debug("Order {} already recorded", order.id());
         }
+    }
+
+    void updateStatus(String orderId, String status) {
+        int rows = jdbc.sql("UPDATE orders.orders SET status = :status WHERE id = :orderId")
+                .param("status", status)
+                .param("orderId", orderId)
+                .update();
+        log.debug("Updated order {} status to {} (rows={})", orderId, status, rows);
+    }
+
+    OrderDetails findById(String orderId) {
+        return jdbc.sql("SELECT id, customer_id, sku, quantity, status FROM orders.orders WHERE id = :orderId")
+                .param("orderId", orderId)
+                .query((rs, rowNum) -> new OrderDetails(
+                        rs.getString("id"),
+                        rs.getString("customer_id"),
+                        rs.getString("sku"),
+                        rs.getInt("quantity"),
+                        rs.getString("status")))
+                .single();
     }
 }

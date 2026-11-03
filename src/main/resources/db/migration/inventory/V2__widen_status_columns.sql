@@ -1,0 +1,1 @@
+ALTER TABLE inventory.holds ALTER COLUMN status TYPE VARCHAR(32);

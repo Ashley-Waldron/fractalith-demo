@@ -26,6 +26,9 @@ public class ShopService implements ShopApi {
     @Override
     public String checkout(CheckoutRequest request) {
         String orderId = UUID.randomUUID().toString();
+        CreateOrderRequest createOrderRequest = new CreateOrderRequest(orderId, request.customerId(), request.sku(), request.quantity());
+        eventPublisher.publish(createOrderRequest);
+
         InventoryRequest inventoryRequest = new InventoryRequest(orderId, request.sku(), request.quantity());
         log.debug("Processing checkout request for sku {}: {}", request.sku(), request.quantity());
         try {
@@ -37,8 +40,6 @@ public class ShopService implements ShopApi {
         }
 
         checkoutRepository.save(orderId, request.customerId(), request.sku(), request.quantity(), "SUBMITTED");
-        CreateOrderRequest createOrderRequest = new CreateOrderRequest(orderId, request.customerId(), request.sku(), request.quantity());
-        eventPublisher.publish(createOrderRequest);
         return "Customer " + request.customerId() + " checked out and async event processing has started.";
     }
 }
