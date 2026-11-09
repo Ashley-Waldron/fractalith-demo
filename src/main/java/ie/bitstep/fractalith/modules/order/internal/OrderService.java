@@ -36,7 +36,7 @@ public class OrderService {
 
     @Async("applicationTaskExecutor")
     @EventListener(CreateOrderRequest.class)
-    void handleOrderRequest(CreateOrderRequest request) {
+    public void handleOrderRequest(CreateOrderRequest request) {
         log.debug("Received create order event over Spring event Listener: {}", request);
         createOrder(request);
     }
@@ -50,18 +50,19 @@ public class OrderService {
     }
 
     public OrderDetails getOrder(String id) {
+        log.debug("Getting order: {}", id);
         return orderRepository.findById(id);
     }
 
     @Async("applicationTaskExecutor")
-    void onInventoryHeld(InventoryHeldEvent event) {
+    public void onInventoryHeld(InventoryHeldEvent event) {
         log.debug("Updating order {} to inventory held", event.orderId());
         recordStage(event.orderId(), "INVENTORY_HELD");
         orderRepository.updateStatus(event.orderId(), "INVENTORY_HELD");
     }
 
     @Async("applicationTaskExecutor")
-    void onPaymentProcessed(PaymentProcessedEvent event) {
+    public void onPaymentProcessed(PaymentProcessedEvent event) {
         String status = "APPROVED".equalsIgnoreCase(event.status()) ? "PAID" : "FAILED";
         log.debug("Updating order {} to {} after payment processing", event.orderId(), status);
         if ("FAILED".equalsIgnoreCase(status)) {
@@ -73,14 +74,14 @@ public class OrderService {
     }
 
     @Async("applicationTaskExecutor")
-    void onOrderShipped(OrderShippedEvent event) {
-        log.info("Order {} has shipped; updating status to SHIPPED.", event.orderId());
+    public void onOrderShipped(OrderShippedEvent event) {
+        log.debug("Order {} has shipped; updating status to SHIPPED.", event.orderId());
         orderRepository.updateStatus(event.orderId(), "SHIPPED");
     }
 
     @Async("applicationTaskExecutor")
-    void onOrderDelivered(OrderDeliveredEvent event) {
-        log.info("Order {} has been delivered; updating status to DELIVERED.", event.orderId());
+    public void onOrderDelivered(OrderDeliveredEvent event) {
+        log.debug("Order {} has been delivered; updating status to DELIVERED.", event.orderId());
         orderRepository.updateStatus(event.orderId(), "DELIVERED");
     }
 
@@ -94,7 +95,7 @@ public class OrderService {
         if (stages.contains("INVENTORY_HELD") && stages.contains("PAID")) {
             orderRepository.updateStatus(orderId, "READY_FOR_SHIPMENT");
             OrderReadyForShipmentEvent ready = new OrderReadyForShipmentEvent(orderId);
-            log.info("Order {} is ready for shipment; emitting domain event.", orderId);
+            log.debug("Order {} is ready for shipment; emitting domain event.", orderId);
             readyForShipmentEventPublishers.forEach(publisher -> publisher.publish(ready));
         }
     }

@@ -119,11 +119,150 @@ services:
     command:
       - |
         set -e
-        for topic in orders.placed payments.processed; do
+        for topic in \
+          orders.placed \
+          orders.created \
+          inventory.held \
+          payments.processed \
+          orders.ready-for-shipment \
+          orders.shipped \
+          orders.delivered; do
           /opt/bitnami/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 \
             --create --if-not-exists --topic "$$topic" --partitions 3 --replication-factor 1
         done
         /opt/bitnami/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --list
+
+  order:
+    image: fractalith:demo
+    build:
+      context: .
+    profiles: ["order"]
+    ports:
+      - "8082:8082"
+    depends_on:
+      db-main:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+    stop_grace_period: 30s
+    environment:
+      SPRING_PROFILES_ACTIVE: only-order
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SERVER_PORT: "8082"
+      DB_URL: jdbc:postgresql://db-main:5432/fractalith
+      DB_USERNAME: fractalith
+      DB_PASSWORD: fractalith
+      INSTANCE_ID: order
+      MODULE_SHOP_ENABLED: "false"
+      MODULE_SEARCH_ENABLED: "false"
+      MODULE_PAYMENT_ENABLED: "false"
+      MODULE_INVENTORY_ENABLED: "false"
+      MODULE_SHIPPING_ENABLED: "false"
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8082/actuator/health/readiness"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+      start_period: 5s
+
+  payment:
+    image: fractalith:demo
+    build:
+      context: .
+    profiles: ["payment"]
+    ports:
+      - "8083:8083"
+    depends_on:
+      db-main:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+    stop_grace_period: 30s
+    environment:
+      SPRING_PROFILES_ACTIVE: only-payment
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SERVER_PORT: "8083"
+      DB_URL: jdbc:postgresql://db-main:5432/fractalith
+      DB_USERNAME: fractalith
+      DB_PASSWORD: fractalith
+      INSTANCE_ID: payment
+      MODULE_SHOP_ENABLED: "false"
+      MODULE_SEARCH_ENABLED: "false"
+      MODULE_ORDER_ENABLED: "false"
+      MODULE_INVENTORY_ENABLED: "false"
+      MODULE_SHIPPING_ENABLED: "false"
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8083/actuator/health/readiness"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+      start_period: 5s
+
+  search:
+    image: fractalith:demo
+    build:
+      context: .
+    profiles: ["search"]
+    ports:
+      - "8084:8084"
+    depends_on:
+      db-main:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+    stop_grace_period: 30s
+    environment:
+      SPRING_PROFILES_ACTIVE: only-search
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SERVER_PORT: "8084"
+      DB_URL: jdbc:postgresql://db-main:5432/fractalith
+      DB_USERNAME: fractalith
+      DB_PASSWORD: fractalith
+      INSTANCE_ID: search
+      MODULE_SHOP_ENABLED: "false"
+      MODULE_ORDER_ENABLED: "false"
+      MODULE_PAYMENT_ENABLED: "false"
+      MODULE_INVENTORY_ENABLED: "false"
+      MODULE_SHIPPING_ENABLED: "false"
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8084/actuator/health/readiness"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+      start_period: 5s
+
+  shipping:
+    image: fractalith:demo
+    build:
+      context: .
+    profiles: ["shipping"]
+    ports:
+      - "8085:8085"
+    depends_on:
+      db-main:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+    stop_grace_period: 30s
+    environment:
+      SPRING_PROFILES_ACTIVE: only-shipping
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SERVER_PORT: "8085"
+      DB_URL: jdbc:postgresql://db-main:5432/fractalith
+      DB_USERNAME: fractalith
+      DB_PASSWORD: fractalith
+      INSTANCE_ID: shipping
+      MODULE_SHOP_ENABLED: "false"
+      MODULE_SEARCH_ENABLED: "false"
+      MODULE_ORDER_ENABLED: "false"
+      MODULE_PAYMENT_ENABLED: "false"
+      MODULE_INVENTORY_ENABLED: "false"
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8085/actuator/health/readiness"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+      start_period: 5s
 
   inventory:
     image: fractalith:demo
@@ -146,6 +285,7 @@ services:
       DB_USERNAME: fractalith
       DB_PASSWORD: fractalith
       MODULE_INVENTORY_DB_MIGRATION_TARGET_URL: jdbc:postgresql://db-inventory:5432/fractalith
+      MODULE_INVENTORY_PUBLISHERS_INVENTORY_HELD: kafka
       INSTANCE_ID: inventory
       MODULE_SHOP_ENABLED: "false"
       MODULE_SEARCH_ENABLED: "false"

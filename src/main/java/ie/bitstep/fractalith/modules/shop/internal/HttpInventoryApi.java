@@ -38,6 +38,6 @@ class HttpInventoryApi implements InventoryApi {
             }
             throw new InventoryException("Inventory service unavailable");
         }
-        log.debug("Successfully called inventory service over HTTP to hold item: {}", request);
+        log.info("Successfully called inventory service over HTTP to hold item: {}", request);
     }
 }

@@ -13,8 +13,8 @@ public class KafkaEventPublisher<T> implements EventPublisher<T> {
 
     @Override
     public void publish(T event) {
-        log.debug("Publishing event to Kafka topic '{}': {}", topic, event);
+        log.trace("Publishing event to Kafka topic '{}': {}", topic, event);
         kafkaTemplate.send(topic, event);
-        log.debug("Published event to Kafka topic '{}': {}", topic, event);
+        log.info("Published event to Kafka topic '{}': {}", topic, event);
     }
 }

@@ -1,7 +1,8 @@
-package ie.bitstep.fractalith.modules.order.internal;
+package ie.bitstep.fractalith.modules.order.internal.event.consumers.local;
 
 import ie.bitstep.fractalith.common.api.ConditionalOnPropertyContains;
 import ie.bitstep.fractalith.common.api.EventConsumer;
+import ie.bitstep.fractalith.modules.order.internal.OrderService;
 import ie.bitstep.fractalith.modules.payment.api.PaymentProcessedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +24,7 @@ class PaymentProcessedEventConsumer implements EventConsumer<PaymentProcessedEve
     @EventListener(PaymentProcessedEvent.class)
     @Override
     public void consume(PaymentProcessedEvent event) {
-        log.debug("Received payment processed event over Spring event Listener: {}", event);
+        log.info("Received payment processed event over Spring event Listener: {}", event);
         orderService.onPaymentProcessed(event);
     }
 }

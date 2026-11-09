@@ -40,7 +40,7 @@ class InventoryService implements InventoryApi {
     void onPaymentProcessed(PaymentProcessedEvent event) {
         boolean approved = "APPROVED".equalsIgnoreCase(event.status());
         if (repository.settle(event.orderId(), approved)) {
-            log.info("{} inventory for order {}", approved ? "Committed" : "Released", event.orderId());
+            log.debug("{} inventory for order {}", approved ? "Committed" : "Released", event.orderId());
         }
     }
 }

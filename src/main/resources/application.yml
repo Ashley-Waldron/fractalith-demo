@@ -103,4 +103,4 @@ logging:
   level:
     ie:
       bitstep:
-        fractalith: DEBUG
+        fractalith: INFO

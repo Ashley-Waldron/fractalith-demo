@@ -23,6 +23,7 @@ class PaymentProcessedEventConsumer implements EventConsumer<PaymentProcessedEve
     @EventListener(PaymentProcessedEvent.class)
     @Override
     public void consume(PaymentProcessedEvent event) {
+        log.info("Received payment processed event via Spring event Listener:: {}", event);
         inventoryService.onPaymentProcessed(event);
     }
 }

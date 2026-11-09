@@ -1,8 +1,9 @@
-package ie.bitstep.fractalith.modules.order.internal;
+package ie.bitstep.fractalith.modules.order.internal.event.consumers.kafka;
 
 import ie.bitstep.fractalith.common.api.ConditionalOnPropertyContains;
 import ie.bitstep.fractalith.common.api.EventConsumer;
 import ie.bitstep.fractalith.modules.order.api.OrderShippedEvent;
+import ie.bitstep.fractalith.modules.order.internal.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

@@ -3,7 +3,9 @@
 **Story:** the app starts as a monolith (3 instances behind a gateway). Without
 touching the code, we stand up the inventory module as its own service and
 roll the monolith instances over to use it, while traffic keeps flowing and
-nothing fails.
+nothing fails. The same pattern can then be repeated for the other modules
+(orders, payments, search), while `shop` stays as the main app module that
+coordinates the rest.
 
 ## What's in the stack
 
@@ -52,7 +54,9 @@ docker compose -f docker-compose.demo.yml ps
 
 Say: every module (shop, order, payment, inventory, search) runs inside each
 instance. Modules talk through in-process Spring events. There is no Kafka and
-no inventory service yet.
+no inventory service yet. The same live-cutover pattern can later be used to
+extract order, payment, and search modules one by one, while `shop` remains
+as the main module that serves the application.
 
 Start traffic and leave it running for the rest of the demo.
 
@@ -129,6 +133,11 @@ cat docker-compose.demo.split.yml      # bash
 - `MODULE_SHOP_APIS_INVENTORY_TYPE=http` and `..._URL=http://inventory:8081`: the shop module calls inventory over HTTP instead of in-process
 - `MODULE_PAYMENT_PUBLISHERS_PAYMENT_PROCESSED=kafka`: payment events go to Kafka instead of in-process events
 
+This is the same pattern you'd use for any of the other modules too: cut them off
+from the main app, switch the caller to the new service, and keep traffic moving
+without a code change to the app itself. `shop` stays as the main module; the
+other modules can be extracted independently.
+
 Then run the restart. It recreates one instance at a time and waits for each
 to become healthy before moving to the next.
 
@@ -187,6 +196,172 @@ Check the totals from Terminal B and stop the generator with Ctrl+C. The
 Optional extra: stop the inventory container and show that checkouts now fail
 (`docker compose -f docker-compose.demo.yml stop inventory`), then start it
 again. That's the new trade-off of running it as a separate service.
+
+## Appendix: cookbook for extracting every other module one at a time
+
+The inventory story is the example, but the same pattern works for any module
+except `shop`, which stays as the main app module. Use the same three-step loop:
+
+1. Start the module as its own service.
+2. Turn the module off inside the app and switch the dependency to remote Kafka/HTTP.
+3. Rolling restart the app instances and prove traffic keeps flowing.
+
+IMPORTANT: do not hand-edit config files during the live demo. Keep the app
+configuration static and use the prebuilt compose overrides or the existing
+startup scripts so the presenter can just run the commands and keep the story
+moving.
+
+### 1) Extract `order`
+
+**Start the service**
+
+```bash
+docker compose -f docker-compose.demo.yml up -d --wait kafka kafka-init order
+```
+
+**Switch the app over**
+
+Use the already-prepared override file rather than editing anything live:
+
+```bash
+docker compose -f docker-compose.demo.yml -f docker-compose.demo.split.yml up -d --no-deps --force-recreate --wait app-1 app-2 app-3
+```
+
+The values above are the same ones already baked into `docker-compose.demo.split.yml`.
+The demo should not require a manual config change in front of the audience.
+
+**Restart the app instances**
+
+```bash
+powershell -ExecutionPolicy Bypass -File scripts\rolling-restart.ps1
+# or
+./scripts/rolling-restart.sh
+```
+
+**Verify**
+
+```bash
+docker compose -f docker-compose.demo.yml logs --tail 50 order
+```
+
+Look for the order service receiving and publishing the same events that the
+monolith used to drive locally.
+
+### 2) Extract `payment`
+
+**Start the service**
+
+```bash
+docker compose -f docker-compose.demo.yml up -d --wait kafka kafka-init payment
+```
+
+**Switch the app over**
+
+Keep it static and use the existing override file instead of editing config in the demo:
+
+```bash
+docker compose -f docker-compose.demo.yml -f docker-compose.demo.split.yml up -d --no-deps --force-recreate --wait app-1 app-2 app-3
+```
+
+**Restart the app instances**
+
+```bash
+powershell -ExecutionPolicy Bypass -File scripts\rolling-restart.ps1
+# or
+./scripts/rolling-restart.sh
+```
+
+**Verify**
+
+```bash
+docker compose -f docker-compose.demo.yml logs --tail 50 payment
+```
+
+The app continues to process orders, but payment logic now runs in the standalone
+service instead of in-process.
+
+### 3) Extract `search`
+
+**Start the service**
+
+```bash
+docker compose -f docker-compose.demo.yml up -d --wait kafka kafka-init search
+```
+
+**Switch the app over**
+
+Use the ready-made override config from the repo, not a live edit in the terminal:
+
+```bash
+docker compose -f docker-compose.demo.yml -f docker-compose.demo.split.yml up -d --no-deps --force-recreate --wait app-1 app-2 app-3
+```
+
+**Restart the app instances**
+
+```bash
+powershell -ExecutionPolicy Bypass -File scripts\rolling-restart.ps1
+# or
+./scripts/rolling-restart.sh
+```
+
+**Verify**
+
+```bash
+docker compose -f docker-compose.demo.yml logs --tail 50 search
+```
+
+The app keeps serving checkouts while the search view is built from the
+standalone service.
+
+### 4) Extract `shipping`
+
+**Start the service**
+
+```bash
+docker compose -f docker-compose.demo.yml up -d --wait kafka kafka-init shipping
+```
+
+**Switch the app over**
+
+Use the prebuilt shipping override instead of changing files live in front of the audience:
+
+```bash
+docker compose -f docker-compose.demo.yml -f docker-compose.demo.split.yml up -d --no-deps --force-recreate --wait app-1 app-2 app-3
+```
+
+**Restart the app instances**
+
+```bash
+powershell -ExecutionPolicy Bypass -File scripts\rolling-restart.ps1
+# or
+./scripts/rolling-restart.sh
+```
+
+**Verify**
+
+```bash
+docker compose -f docker-compose.demo.yml logs --tail 50 shipping
+```
+
+The same zero-downtime pattern applies: the module becomes remote,
+traffic keeps flowing, and the app instances are rolled over one at a time.
+
+### 5) Repeat the rythm for any future module
+
+Use the same minimal recipe every time, without editing config files mid-demo:
+
+```bash
+docker compose -f docker-compose.demo.yml up -d --wait kafka kafka-init <module-name>
+docker compose -f docker-compose.demo.yml -f docker-compose.demo.split.yml up -d --no-deps --force-recreate --wait app-1 app-2 app-3
+# or use the corresponding prepared override file for the module being extracted
+powershell -ExecutionPolicy Bypass -File scripts\rolling-restart.ps1
+# verify logs and traffic remain healthy
+```
+
+The key idea is not unique to inventory: as long as the module has a clear
+boundary and the callers can switch to a remote protocol, the rollout is the
+same. `shop` is the main module; the rest can be extracted one at a time with
+no application downtime.
 
 ## Part 2 (longer demo): move the inventory database while serving traffic
 

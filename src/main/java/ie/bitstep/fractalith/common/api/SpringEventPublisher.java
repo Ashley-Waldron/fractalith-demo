@@ -15,6 +15,6 @@ public class SpringEventPublisher<T> implements EventPublisher<T> {
     @Override
     public void publish(T event) {
         delegate.publishEvent(event);
-        log.debug("Published event using Spring Event Publisher: {}", event);
+        log.info("Published event using Spring Event Publisher: {}", event);
     }
 }

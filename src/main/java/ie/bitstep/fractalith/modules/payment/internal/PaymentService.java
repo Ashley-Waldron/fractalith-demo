@@ -24,7 +24,7 @@ class PaymentService {
         log.debug("Processing order placed event: {}", event);
         Payment payment = processPayment(new PaymentRequest(event.orderId(), event.quantity() * 9.99));
         paymentRepository.save(payment);
-        log.info("Payment processed for order {}: {}", event.orderId(), payment.status());
+        log.debug("Payment processed for order {}: {}", event.orderId(), payment.status());
 
         PaymentProcessedEvent paymentProcessedEvent = new PaymentProcessedEvent(payment.orderId(), payment.amount(), payment.status());
         eventPublishers.forEach(publisher -> publisher.publish(paymentProcessedEvent));

@@ -21,7 +21,7 @@ class OrderPlacedKafkaEventConsumer implements EventConsumer<OrderPlacedEvent> {
     @Override
     @KafkaListener(topics = "orders.placed", groupId = "fractalith")
     public void consume(OrderPlacedEvent event) {
-        log.debug("Received order placed event over Kafka topic 'orders.placed': {}", event);
+        log.info("Received order placed event over Kafka topic 'orders.placed': {}", event);
         searchService.processOrderPlacedEvent(event);
     }
 }

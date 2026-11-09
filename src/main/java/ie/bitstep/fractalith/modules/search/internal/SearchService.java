@@ -37,6 +37,6 @@ class SearchService implements SearchApi {
     void processOrderPlacedEvent(OrderPlacedEvent event) {
         ProductDocument document = new ProductDocument(event.sku(), "Indexed product for order " + event.orderId());
         searchRepository.index(event.orderId(), document);
-        log.info("Search index update for sku {}: {}", event.sku(), document.name());
+        log.debug("Search index update for sku {}: {}", event.sku(), document.name());
     }
 }

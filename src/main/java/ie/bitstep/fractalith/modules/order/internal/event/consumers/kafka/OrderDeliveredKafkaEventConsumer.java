@@ -1,29 +1,28 @@
-package ie.bitstep.fractalith.modules.order.internal;
+package ie.bitstep.fractalith.modules.order.internal.event.consumers.kafka;
 
 import ie.bitstep.fractalith.common.api.ConditionalOnPropertyContains;
 import ie.bitstep.fractalith.common.api.EventConsumer;
 import ie.bitstep.fractalith.modules.order.api.OrderDeliveredEvent;
+import ie.bitstep.fractalith.modules.order.internal.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
-@Component("orderDeliveredEventConsumer")
+@Component("orderDeliveredKafkaEventConsumer")
 @ConditionalOnProperty(prefix = "modules.order", name = "enabled", havingValue = "true")
-@ConditionalOnPropertyContains(prefix = "modules.order.consumers", name = "order-delivered", value = "local")
+@ConditionalOnPropertyContains(prefix = "modules.order.consumers", name = "order-delivered", value = "kafka")
 @RequiredArgsConstructor
 @Slf4j
-class OrderDeliveredEventConsumer implements EventConsumer<OrderDeliveredEvent> {
+class OrderDeliveredKafkaEventConsumer implements EventConsumer<OrderDeliveredEvent> {
 
     private final OrderService orderService;
 
-    @Async("applicationTaskExecutor")
-    @EventListener(OrderDeliveredEvent.class)
     @Override
+    @KafkaListener(topics = "orders.delivered", groupId = "fractalith")
     public void consume(OrderDeliveredEvent event) {
-        log.debug("Received order delivered event over Spring event Listener: {}", event);
+        log.info("Received Kafka order delivered event on topic 'orders.delivered': {}", event);
         orderService.onOrderDelivered(event);
     }
 }

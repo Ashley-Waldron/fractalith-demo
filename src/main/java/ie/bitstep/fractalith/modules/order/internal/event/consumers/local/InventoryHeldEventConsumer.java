@@ -1,27 +1,30 @@
-package ie.bitstep.fractalith.modules.order.internal;
+package ie.bitstep.fractalith.modules.order.internal.event.consumers.local;
 
 import ie.bitstep.fractalith.common.api.ConditionalOnPropertyContains;
 import ie.bitstep.fractalith.common.api.EventConsumer;
 import ie.bitstep.fractalith.modules.inventory.api.InventoryHeldEvent;
+import ie.bitstep.fractalith.modules.order.internal.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-@Component("orderInventoryHeldKafkaEventConsumer")
+@Component("orderInventoryHeldEventConsumer")
 @ConditionalOnProperty(prefix = "modules.order", name = "enabled", havingValue = "true")
-@ConditionalOnPropertyContains(prefix = "modules.order.consumers", name = "inventory-held", value = "kafka")
+@ConditionalOnPropertyContains(prefix = "modules.order.consumers", name = "inventory-held", value = "local")
 @RequiredArgsConstructor
 @Slf4j
-class InventoryHeldKafkaEventConsumer implements EventConsumer<InventoryHeldEvent> {
+class InventoryHeldEventConsumer implements EventConsumer<InventoryHeldEvent> {
 
     private final OrderService orderService;
 
+    @Async("applicationTaskExecutor")
+    @EventListener(InventoryHeldEvent.class)
     @Override
-    @KafkaListener(topics = "inventory.held", groupId = "fractalith")
     public void consume(InventoryHeldEvent event) {
-        log.info("Received Kafka inventory held event on topic 'inventory.held': {}", event);
+        log.info("Received inventory held event over Spring event Listener: {}", event);
         orderService.onInventoryHeld(event);
     }
 }

@@ -23,7 +23,7 @@ class OrderPlacedEventConsumer implements EventConsumer<OrderPlacedEvent> {
     @EventListener(OrderPlacedEvent.class)
     @Override
     public void consume(OrderPlacedEvent event) {
-        log.debug("Received order placed event over Spring event Listener: {}", event);
+        log.info("Received order placed event over Spring event Listener: {}", event);
         searchService.processOrderPlacedEvent(event);
     }
 }

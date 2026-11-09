@@ -24,14 +24,14 @@ class ShippingService {
     @Async("applicationTaskExecutor")
     @EventListener(OrderReadyForShipmentEvent.class)
     void onOrderReadyForShipment(OrderReadyForShipmentEvent event) {
-        log.info("Order {} is ready for shipment; creating shipment and marking as shipped.", event.orderId());
+        log.debug("Order {} is ready for shipment; creating shipment and marking as shipped.", event.orderId());
         shippedEventPublishers.forEach(publisher -> publisher.publish(new OrderShippedEvent(event.orderId())));
     }
 
     @Async("applicationTaskExecutor")
     @EventListener(OrderShippedEvent.class)
     void onOrderShipped(OrderShippedEvent event) {
-        log.info("Order {} is now shipped; delivering it to the customer.", event.orderId());
+        log.debug("Order {} is now shipped; delivering it to the customer.", event.orderId());
         deliveredEventPublishers.forEach(publisher -> publisher.publish(new OrderDeliveredEvent(event.orderId())));
     }
 }

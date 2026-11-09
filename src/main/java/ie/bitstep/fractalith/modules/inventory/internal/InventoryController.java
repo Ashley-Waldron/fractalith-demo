@@ -25,7 +25,7 @@ class InventoryController {
 
     @PostMapping("/hold")
     public void hold(@RequestBody InventoryRequest request) {
-        log.debug("Received request to hold inventory: {}", request);
+        log.info("Received HTTP request to hold inventory: {}", request);
         inventoryService.hold(request);
     }
 

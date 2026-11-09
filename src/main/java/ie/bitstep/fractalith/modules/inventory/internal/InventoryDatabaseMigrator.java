@@ -53,7 +53,7 @@ class InventoryDatabaseMigrator {
         try (HikariDataSource target = ModuleDatabase.pool("inventory-prepare", targetUrl, username, password)) {
             ModuleDatabase.migrate(target, "inventory");
         }
-        log.info("Prepared inventory schema in {}", targetUrl);
+        log.debug("Prepared inventory schema in {}", targetUrl);
     }
 
     void freeze(Duration autoResumeAfter) {

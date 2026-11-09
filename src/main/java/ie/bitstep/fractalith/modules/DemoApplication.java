@@ -3,6 +3,7 @@ package ie.bitstep.fractalith.modules;
 import ie.bitstep.fractalith.common.api.ConditionalOnPropertyContains;
 import ie.bitstep.fractalith.common.api.EventPublisher;
 import ie.bitstep.fractalith.common.api.SpringEventPublisher;
+import ie.bitstep.fractalith.modules.inventory.api.InventoryHeldEvent;
 import ie.bitstep.fractalith.modules.order.api.OrderDeliveredEvent;
 import ie.bitstep.fractalith.modules.order.api.OrderPlacedEvent;
 import ie.bitstep.fractalith.modules.order.api.OrderReadyForShipmentEvent;
@@ -34,8 +35,8 @@ public class DemoApplication {
 	}
 
 	@Bean
-	@ConditionalOnProperty(prefix = "modules.order", name = "enabled", havingValue = "true", matchIfMissing = true)
-	@ConditionalOnPropertyContains(prefix = "modules.order.publishers", name = "create-order-request", value = "local")
+	@ConditionalOnProperty(prefix = "modules.shop", name = "enabled", havingValue = "true", matchIfMissing = true)
+	@ConditionalOnPropertyContains(prefix = "modules.shop.publishers", name = "create-order-request", value = "local")
 	EventPublisher<CreateOrderRequest> orderRequestEventPublisher(ApplicationEventPublisher delegate) {
 		return new SpringEventPublisher<>(delegate);
 	}
@@ -50,7 +51,7 @@ public class DemoApplication {
 	@Bean
 	@ConditionalOnProperty(prefix = "modules.inventory", name = "enabled", havingValue = "true")
 	@ConditionalOnPropertyContains(prefix = "modules.inventory.publishers", name = "inventory-held", value = "local")
-	EventPublisher<ie.bitstep.fractalith.modules.inventory.api.InventoryHeldEvent> inventoryHeldEventPublisher(ApplicationEventPublisher delegate) {
+	EventPublisher<InventoryHeldEvent> inventoryHeldEventPublisher(ApplicationEventPublisher delegate) {
 		return new SpringEventPublisher<>(delegate);
 	}
 

@@ -23,7 +23,7 @@ class OrderReadyForShipmentEventConsumer implements EventConsumer<OrderReadyForS
     @EventListener(OrderReadyForShipmentEvent.class)
     @Override
     public void consume(OrderReadyForShipmentEvent event) {
-        log.debug("Received order ready for shipment event over Spring event Listener: {}", event);
+        log.info("Received order ready for shipment event over Spring event Listener: {}", event);
         shippingService.onOrderReadyForShipment(event);
     }
 }

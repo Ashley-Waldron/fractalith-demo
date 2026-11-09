@@ -22,6 +22,6 @@ class InventorySeeder implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) {
         repository.seedIfAbsent("sku-1", seedStock);
-        log.info("Inventory stock ready for sku-1 (seed quantity {})", seedStock);
+        log.debug("Inventory stock ready for sku-1 (seed quantity {})", seedStock);
     }
 }

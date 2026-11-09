@@ -1,18 +1,32 @@
-# Override applied during the rolling restart: the monolith instances switch the
-# inventory module off, call the standalone inventory service over HTTP and
-# publish payment events to Kafka instead of handling them in-process.
+# Override used during a rolling restart to split the app from the module runtime.
+# This keeps the gateway and shop traffic uninterrupted while the app instances
+# move from in-process modules to remote Kafka/HTTP integrations.
 #
 #   docker compose -f docker-compose.demo.yml -f docker-compose.demo.split.yml up -d --no-deps --wait app-1
-x-inventory-split: &inventory-split
+x-split-runtime: &split-runtime
   MODULE_INVENTORY_ENABLED: "false"
+  MODULE_SEARCH_ENABLED: "false"
+  MODULE_ORDER_ENABLED: "false"
+  MODULE_PAYMENT_ENABLED: "false"
+  MODULE_SHIPPING_ENABLED: "false"
   MODULE_SHOP_APIS_INVENTORY_TYPE: http
   MODULE_SHOP_APIS_INVENTORY_URL: http://inventory:8081
+  MODULE_SHOP_PUBLISHERS_CREATE_ORDER_REQUEST: kafka
+  MODULE_ORDER_PUBLISHERS_CREATE_ORDER_REQUEST: kafka
+  MODULE_ORDER_PUBLISHERS_ORDER_READY_FOR_SHIPMENT: kafka
+  MODULE_ORDER_CONSUMERS_INVENTORY_HELD: kafka
+  MODULE_ORDER_CONSUMERS_PAYMENT_PROCESSED: kafka
+  MODULE_SEARCH_CONSUMERS_ORDER_PLACED: kafka
   MODULE_PAYMENT_PUBLISHERS_PAYMENT_PROCESSED: kafka
+  MODULE_PAYMENT_CONSUMERS_ORDER_PLACED: kafka
+  MODULE_SHIPPING_CONSUMERS_ORDER_READY_FOR_SHIPMENT: kafka
+  MODULE_SHIPPING_PUBLISHERS_ORDER_SHIPPED: kafka
+  MODULE_SHIPPING_PUBLISHERS_ORDER_DELIVERED: kafka
 
 services:
   app-1:
-    environment: *inventory-split
+    environment: *split-runtime
   app-2:
-    environment: *inventory-split
+    environment: *split-runtime
   app-3:
-    environment: *inventory-split
+    environment: *split-runtime
